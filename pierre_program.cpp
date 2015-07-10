@@ -34,8 +34,6 @@ Date | open_value | High_value | Low_value | close_value
 #include <sstream>
 #include <fstream>
 
-typedef std::vector<std::string> vector_str;
-
 float converter_str_f(std::string value_str)
 {
   float value_f;
@@ -71,7 +69,7 @@ int countFileLine(std::string nameFile) // Count number line in a file
 }
 
 // function which read a line and write date, open, close in a columns of cache array
-void parseLine(std::string& line, int lineIndex, float* cache, std::string* dateCache)
+void parseLine(std::string& line, int lineIndex, float cache[][4], std::string dateCache[])
 {
   std::string comma(",");
 
@@ -87,55 +85,55 @@ void parseLine(std::string& line, int lineIndex, float* cache, std::string* date
 
   value_str = line.substr(pos1 + 1, length - 1);
   float value_f = converter_str_f(value_str);
-  cache[lineIndex + 0] = value_f;
+  cache[lineIndex][0] = value_f;
 
   pos1 = line.find(comma, pos2 + 1);
   length = pos1 - pos2;
 
   value_str = line.substr(pos2 + 1, length - 1);
   value_f = converter_str_f(value_str);
-  cache[lineIndex + 1] = value_f;
+  cache[lineIndex][1] = value_f;
 
   pos2 = line.find(comma, pos1 + 1);
   length = pos2 - pos1;
 
   value_str = line.substr(pos1 + 1, length - 1);
   value_f = converter_str_f(value_str);
-  cache[lineIndex + 2] = value_f;
+  cache[lineIndex][2] = value_f;
 
   value_str = line.substr(pos2 + 1);
   value_f = converter_str_f(value_str);
-  cache[lineIndex + 3] = value_f;
+  cache[lineIndex][3] = value_f;
 }
 
-void integrate(int lineIndex, int lineIndex_ResultArray, int numberLineCompare, int size_cache, float* cache, std::string* dateCache, std::string* resultArray)
+void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache[][4], std::string dateCache[], std::string resultArray[][5])
 {
   // Compute max of maxs .... and min of mins
-  float maxOfHightValues =  cache[(lineIndex % size_cache) + 1];
-  float minOfLowValues = cache[(lineIndex % size_cache) + 2];
+  float maxOfHightValues =  cache[lineIndex % size_cache][1];
+  float minOfLowValues = cache[lineIndex % size_cache][2];
 
   for(int i = lineIndex + 1; i < (lineIndex + numberLineCompare)-1; i++)
   {
     int cache_index = i % size_cache;
-    if (cache[cache_index + 1] > maxOfHightValues)
-      maxOfHightValues = cache[cache_index + 1];
-    if (cache[cache_index + 2] < minOfLowValues)
-        minOfLowValues = cache[cache_index + 3];
+    if (cache[cache_index][1] > maxOfHightValues)
+      maxOfHightValues = cache[cache_index][1];
+    if (cache[cache_index][2] < minOfLowValues)
+        minOfLowValues = cache[cache_index][2];
   }
   // copy the most recent date
-  resultArray[lineIndex_ResultArray + 0] = dateCache[lineIndex % size_cache];
+  resultArray[lineIndex][0] = dateCache[lineIndex % size_cache];
   // copy older open_value among numberLineCompare
-  resultArray[lineIndex_ResultArray + 1] = converter_f_str(cache[((lineIndex + numberLineCompare)% size_cache) + 0]);
+  resultArray[lineIndex][1] = converter_f_str(cache[(lineIndex + numberLineCompare)% size_cache][0]);
   // copy newest close_value among numberLineCompare
-  resultArray[lineIndex_ResultArray + 4] = converter_f_str(cache[(lineIndex % size_cache) + 3]);
+  resultArray[lineIndex][4] = converter_f_str(cache[lineIndex % size_cache][3]);
 
-  resultArray[lineIndex_ResultArray + 2] = converter_f_str(maxOfHightValues);
+  resultArray[lineIndex][2] = converter_f_str(maxOfHightValues);
 
-  resultArray[lineIndex_ResultArray + 3] = converter_f_str(minOfLowValues);
+  resultArray[lineIndex][3] = converter_f_str(minOfLowValues);
 }
 
 // Function which process a CSV file and copy results in resultArray
-bool processCSVFile(std::string& nameFile, int numberLineCompare, std::string* resultArray)
+bool processCSVFile(std::string& nameFile, int numberLineCompare, std::string resultArray[][5])
 {
   std::ifstream openFile(nameFile.c_str());
   std::string line("");
@@ -150,22 +148,21 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare, std::string* r
   int size_cache = numberLineCompare * 2;
 
   // Create a dinamic array (dateCache)
-  std::string *dateCache;
+  std::string* dateCache;
   dateCache = new std::string[size_cache];
-  if(dateCache == NULL)
+
+  if(dateCache == nullptr)
   {
-    delete[] dateCache;
     std::cout << "Error ! Unable to create date cache Array" << std::endl;
     return -1;
   }
 
   // Create a multi-dimensional dynamic array (cache)
-  float *cache;
-  cache = new float[size_cache*4];
+  float (*cache)[4];
+  cache = new float[size_cache][4];
 
-  if(cache == NULL)
+  if(cache == nullptr)
   {
-    delete[] cache;
     std::cout << "Error ! Unable to create cache Array" << std::endl;
     return -1;
   }
@@ -178,19 +175,19 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare, std::string* r
   }
 
   int lineIndex = 0;
-  int lineIndex_ResultArray = 0;
   while(getline(openFile, line)) // Compare the x line for copy result in array
   {
-    integrate(lineIndex, lineIndex_ResultArray, numberLineCompare, size_cache, cache, dateCache, resultArray);
+    integrate(lineIndex, numberLineCompare, size_cache, cache, dateCache, resultArray);
     parseLine(line, (lineIndex + numberLineCompare) % size_cache, cache, dateCache);
     lineIndex++;
-    lineIndex_ResultArray += 5;
   }
+  delete[] cache;
+  delete[] dateCache;
   return true;
 }
 
 
-bool writeResultArray(std::string* resultArray, int size_resultArray) // Function which read result array in a CSV file
+bool writeResultArray(std::string resultArray[][5], int size_resultArray) // Function which read result array in a CSV file
 {
   std::string createFile("resultArray.csv");
   std::ofstream writeFile(createFile.c_str());
@@ -201,17 +198,17 @@ bool writeResultArray(std::string* resultArray, int size_resultArray) // Functio
     return false;
   }
   std::cout << size_resultArray - 1 << std::endl;
-  for(int i = 0; i <= size_resultArray - 1; i += 5)
+  for(int i = 0; i <= size_resultArray - 1; i++)
   {
-    writeFile << resultArray[i + 0];
+    writeFile << resultArray[i][0];
     writeFile << ",";
-    writeFile << resultArray[i + 1];
+    writeFile << resultArray[i][1];
     writeFile << ",";
-    writeFile << resultArray[i + 2];
+    writeFile << resultArray[i][2];
     writeFile << ",";
-    writeFile << resultArray[i + 3];
+    writeFile << resultArray[i][3];
     writeFile << ",";
-    writeFile << resultArray[i + 4];
+    writeFile << resultArray[i][4];
     writeFile << std::endl;
   }
   return true;
@@ -230,17 +227,16 @@ int main(int argc, char **argv)
 
   numberLine_baseFile = countFileLine(nameFile); // count number line in fx_base file
 
-  std::string *resultArray; // Create a multi-dimensional array (resultArray)
-  resultArray = new std::string[numberLine_baseFile * 5];
-  if(resultArray == NULL)
+  std::string (*resultArray)[5]; // Create a multi-dimensional array (resultArray)
+  resultArray = new std::string[numberLine_baseFile][5]();
+  if(resultArray == nullptr)
   {
-    delete[] resultArray;
     std::cout << "Error ! Unable to create result Array" << std::endl;
     return -1;
   }
 
   if( ! processCSVFile(nameFile, numberLineCompare, resultArray)) return -1;
-  if( ! writeResultArray(resultArray, numberLine_baseFile * 5)) return -1;
+  if( ! writeResultArray(resultArray, numberLine_baseFile)) return -1;
   std::cout << "Done !" << std::endl;
   return 0;
 }
