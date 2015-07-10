@@ -1,0 +1,4 @@
+##Fx_integration configuration##
+
+NAME_BASE_CSV_FILE fx_base.csv
+NUMBER_OF_LINE_TO_COMPARE 25

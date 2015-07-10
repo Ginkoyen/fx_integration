@@ -52,6 +52,15 @@ std::string converter_f_str(float value_f)// convert a float type to a str type
   return value_str;
 }
 
+int converter_str_int(std::string value_str)// convert a str type to a int type
+{
+  int value_int;
+  std::stringstream converter;
+  converter << value_str;
+  converter >> value_int;
+  return value_int;
+}
+
 int countFileLine(std::string nameFile) // Count number line in a file
 {
   int numberLine = 0;// number of line to CSV file
@@ -109,7 +118,7 @@ void parseLine(std::string& line, int lineIndex, float cache[][4], std::string d
 }
 
 // compare number of line chosen by user for bring the hight_value, low_value... in the result array
-void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache[][4], std::string dateCache[], std::string resultArray[][5])
+void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache[][4], std::string dateCache[], std::string* resultArray)
 {
   // Compute max of maxs .... and min of mins
   float maxOfHightValues =  cache[lineIndex % size_cache][1];
@@ -126,22 +135,23 @@ void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache
       minOfLowValues = cache[cache_index][2];
   }
   // copy the most recent date
-  resultArray[lineIndex][0] = dateCache[lineIndex % size_cache];
+  resultArray[0] = dateCache[lineIndex % size_cache];
   // copy older open_value among numberLineCompare
-  resultArray[lineIndex][1] = converter_f_str(cache[(lineIndex + numberLineCompare - 1)% size_cache][0]);
+  resultArray[1] = converter_f_str(cache[(lineIndex + numberLineCompare - 1)% size_cache][0]);
   // copy newest close_value among numberLineCompare
-  resultArray[lineIndex][4] = converter_f_str(cache[lineIndex % size_cache][3]);
+  resultArray[4] = converter_f_str(cache[lineIndex % size_cache][3]);
   // copy hight_value among numberLineCompare
-  resultArray[lineIndex][2] = converter_f_str(maxOfHightValues);
+  resultArray[2] = converter_f_str(maxOfHightValues);
   // copy low_value among numberLineCompare
-  resultArray[lineIndex][3] = converter_f_str(minOfLowValues);
+  resultArray[3] = converter_f_str(minOfLowValues);
 }
 
 // Function which call parseLine function which bring line to CSV file in a cache and
-// integrate fonction which compare number of line chosen by user for bring the hight_value,
-// low_value... in the result array
-int processCSVFile(std::string& nameFile, int numberLineCompare, std::string resultArray[][5])
+// integrate function which compare number of line chosen by user for bring the hight_value,
+// low_value... in the result result in csv file
+bool processCSVFile(std::string& nameFile, int numberLineCompare)
 {
+  // Open the CSV file which contain the donnees
   std::ifstream openFile(nameFile.c_str());
   std::string line("");
   if(!openFile)
@@ -149,6 +159,18 @@ int processCSVFile(std::string& nameFile, int numberLineCompare, std::string res
     std::cout << "Error ! Unable to read " << nameFile << " file" << std::endl;
     return -1;
   }
+
+  // Create and open the result csv file
+  std::string createFile("fx_result.csv");
+  std::ofstream writeFile(createFile.c_str());
+  std::string lineResult;
+  if(!writeFile)
+  {
+    std::cout << "Error ! Unable to create resultArray.csv file" << std::endl;
+    return false;
+  }
+
+  std::string resultArray[5]; //create a result array
 
   // create a cache with 2 times the size of lines to process for each iteration
   // in order to maximize reuse of line already read.
@@ -180,64 +202,68 @@ int processCSVFile(std::string& nameFile, int numberLineCompare, std::string res
   }
 
   int lineIndex = 0;
-  while(getline(openFile, line)) // Compare the x line for copy result in array
+  while(getline(openFile, line)) // Compare the x line for copy result in array and read result in csv file
   {
     integrate(lineIndex, numberLineCompare, size_cache, cache, dateCache, resultArray);
     parseLine(line, (lineIndex + numberLineCompare) % size_cache, cache, dateCache);
+    lineResult = resultArray[0] + "," + resultArray[1] + "," + resultArray[2] + "," + resultArray[3] + "," + resultArray[4];
+    writeFile << lineResult << std::endl;
     lineIndex++;
   }
+  // Compare the last line and read result in csv file
+  integrate(lineIndex, numberLineCompare, size_cache, cache, dateCache, resultArray);
+  lineResult = resultArray[0] + "," + resultArray[1] + "," + resultArray[2] + "," + resultArray[3] + "," + resultArray[4];
+  writeFile << lineResult << std::endl;
+
+  // Destructor
+  openFile.close();
+  writeFile.close();
   delete[] cache;
   delete[] dateCache;
-  return lineIndex;
+  return true;
 }
 
-
-bool writeResultArray(std::string resultArray[][5], int size_resultArray) // Function which read result array in a CSV file
+// Function which read config file for find csv name File and number line to compare
+bool readConfigFile(std::string& nameFile, int& numberLineCompare)
 {
-  std::string createFile("resultArray.csv");
-  std::ofstream writeFile(createFile.c_str());
+   std::string configFileName("config.txt");// load configuration file
+   std::ifstream openFile(configFileName.c_str()); //Open for reading machineConfig file
+   if(!openFile)
+   {
+     std::cout << "Error ! Unable read the configuration file" << std::endl;
+     return false;
+   }
 
-  if(!writeFile)
-  {
-    std::cout << "Error ! Unable to create resultArray.csv file" << std::endl;
-    return false;
-  }
-  std::cout << size_resultArray - 1 << std::endl;
-  for(int i = 0; i <= size_resultArray - 1; i++)
-  {
-    std::string line = (resultArray[i][0] + "," + resultArray[i][1] + "," + resultArray[i][2] + "," + resultArray[i][3] + "," + resultArray[i][4]);
-    writeFile << line << std::endl;
-  }
-  return true;
+   std::string line("");
+
+   while(getline(openFile, line))// Read name csv file and number of line to compare in config file
+   {
+      if(line.find("NAME_BASE_CSV_FILE") != std::string::npos)
+      {
+         int pos = line.find(" ");
+         nameFile = line.substr(pos+1);
+      }
+      else if(line.find("NUMBER_OF_LINE_TO_COMPARE") != std::string::npos)
+      {
+         int pos = line.find(" ");
+         numberLineCompare = converter_str_int(line.substr(pos+1));
+      }
+   }
+   return true;
 }
 
 int main(int argc, char **argv)
 {
-  std::string nameFile("fx_base.csv");   // name CSV file which contain the donnees
-  int numberLine_baseFile = 0; // Number of line to CSV file
-  int numberLineCompare = 25; // Number of line to compare chosen by the user
+  std::string nameFile("");   // name CSV file which contain the donnees
+  int numberLineCompare = 0; // Number of line to compare chosen by the user
 
-  numberLine_baseFile = countFileLine(nameFile); // count number line in CSV file
-
-//  std::cout << "Hello, enter file name : ";
-//  std::cin >> nameFile;
-//  std::cout << "Enter number line to compare : ";
-//  std::cin >> numberLineCompare;
-
-  // Create a multi-dimensional dinamic array which contain the results
-  std::string (*resultArray)[5];
-  resultArray = new std::string[numberLine_baseFile][5]();
-  if(resultArray == nullptr)
-  {
-    std::cout << "Error ! Unable to create result Array" << std::endl;
-    return -1;
-  }
+  // read config file for find csv name File and number line to compare
+  if(!readConfigFile(nameFile, numberLineCompare)) return -1;
 
   // Bring line to CSV file in a cache.
   // compare number of line chosen by user for bring the hight_value, low_value... in the result array
   // write result array in CSV file
-  int numberLineArray = processCSVFile(nameFile, numberLineCompare, resultArray);
-  if( ! writeResultArray(resultArray, numberLineArray)) return -1;
+  processCSVFile(nameFile, numberLineCompare);
   std::cout << "Done !" << std::endl;
   return 0;
 }
