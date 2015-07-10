@@ -112,18 +112,20 @@ void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache
   float maxOfHightValues =  cache[lineIndex % size_cache][1];
   float minOfLowValues = cache[lineIndex % size_cache][2];
 
-  for(int i = lineIndex + 1; i < (lineIndex + numberLineCompare)-1; i++)
+  for(int i = lineIndex + 1; i < lineIndex + numberLineCompare; i++)
   {
     int cache_index = i % size_cache;
-    if (cache[cache_index][1] > maxOfHightValues)
+
+    if(cache[cache_index][1] > maxOfHightValues)
       maxOfHightValues = cache[cache_index][1];
-    if (cache[cache_index][2] < minOfLowValues)
-        minOfLowValues = cache[cache_index][2];
+
+    if(cache[cache_index][2] < minOfLowValues)
+      minOfLowValues = cache[cache_index][2];
   }
   // copy the most recent date
   resultArray[lineIndex][0] = dateCache[lineIndex % size_cache];
   // copy older open_value among numberLineCompare
-  resultArray[lineIndex][1] = converter_f_str(cache[(lineIndex + numberLineCompare)% size_cache][0]);
+  resultArray[lineIndex][1] = converter_f_str(cache[(lineIndex + numberLineCompare - 1)% size_cache][0]);
   // copy newest close_value among numberLineCompare
   resultArray[lineIndex][4] = converter_f_str(cache[lineIndex % size_cache][3]);
 
@@ -133,7 +135,7 @@ void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache
 }
 
 // Function which process a CSV file and copy results in resultArray
-bool processCSVFile(std::string& nameFile, int numberLineCompare, std::string resultArray[][5])
+int processCSVFile(std::string& nameFile, int numberLineCompare, std::string resultArray[][5])
 {
   std::ifstream openFile(nameFile.c_str());
   std::string line("");
@@ -168,7 +170,7 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare, std::string re
   }
 
   // initialize cache
-  for(int i = 0; i < numberLineCompare-1; i++)
+  for(int i = 0; i < numberLineCompare; i++)
   {
     getline(openFile, line);
     parseLine(line, i % size_cache, cache, dateCache);
@@ -183,7 +185,7 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare, std::string re
   }
   delete[] cache;
   delete[] dateCache;
-  return true;
+  return lineIndex;
 }
 
 
@@ -235,8 +237,8 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  if( ! processCSVFile(nameFile, numberLineCompare, resultArray)) return -1;
-  if( ! writeResultArray(resultArray, numberLine_baseFile)) return -1;
+  int numberLineArray = processCSVFile(nameFile, numberLineCompare, resultArray);
+  if( ! writeResultArray(resultArray, numberLineArray)) return -1;
   std::cout << "Done !" << std::endl;
   return 0;
 }
