@@ -7,7 +7,7 @@ Programme pour Pierre RADAS qui :
 
 - Tableau constitue de 5 colonnes, exemple avec un echantillon de valeur :
 
-Date | open_value | High_value | Low_value | close_value
+Date | open_value | Hight_value | Low_value | close_value
 1.51 | 581.887    | 24.4774    | 2.85285   | 477.858
 2.80 | 847.4477   | 80.58      | 8.447     | 895.4774
 
@@ -16,7 +16,7 @@ Date | open_value | High_value | Low_value | close_value
 
 - Date : La date la plus recente parmis les x lignes du tableau d entree est rentree dans la colonne date du tableau resultat
 - open_value : La plus ancienne valeur de la colonne open_value parmis les x lignes du tableau d entree est rentree dans la colonne open_value du tableau resultat
-- High_value : La plus haute valeur de la colonne High_Value parmis les x lignes du tableau d entree est rentree dans la colonne High_value du tableau resultat
+- Hight_value : La plus haute valeur de la colonne Hight_Value parmis les x lignes du tableau d entree est rentree dans la colonne Hight_value du tableau resultat
 - Low_value :  La plus basse valeur de la colonne Low_Value parmis les x lignes du tableau d entree est rentree dans la colonne Low_value du tableau resultat
 - close_value : La plus recente valeur de la colonne close_value parmis les x lignes du tableau d entree est rentree dans la colonne close_value du tableau resultat
 
@@ -34,7 +34,7 @@ Date | open_value | High_value | Low_value | close_value
 #include <sstream>
 #include <fstream>
 
-float converter_str_f(std::string value_str)
+float converter_str_f(std::string value_str)// convert a str type to a float type
 {
   float value_f;
   std::stringstream converter;
@@ -43,7 +43,7 @@ float converter_str_f(std::string value_str)
   return value_f;
 }
 
-std::string converter_f_str(float value_f)
+std::string converter_f_str(float value_f)// convert a float type to a str type
 {
   std::string value_str;
   std::stringstream converter;
@@ -54,7 +54,7 @@ std::string converter_f_str(float value_f)
 
 int countFileLine(std::string nameFile) // Count number line in a file
 {
-  int numberLine = 0;
+  int numberLine = 0;// number of line to CSV file
   std::string ghostLine("");
   std::ifstream openFile(nameFile.c_str());
 
@@ -68,44 +68,47 @@ int countFileLine(std::string nameFile) // Count number line in a file
   return numberLine;
 }
 
-// function which read a line and write date, open, close in a columns of cache array
+// function which read a line of CSV file and write open_value, close_value... in a columns of
+// cache array and the date in date cache array
 void parseLine(std::string& line, int lineIndex, float cache[][4], std::string dateCache[])
 {
   std::string comma(",");
 
-  std::string::size_type pos1 = line.find(comma);
+  std::string::size_type pos1 = line.find(comma);// Position to the first comma
 
   // full date value in array date
   std::string value_str = line.substr(0, pos1);
-  dateCache[lineIndex] = value_str;
+  dateCache[lineIndex] = value_str;// Bring date in date cache array
+
 
   // convert and full open, close... value in array float
-  std::string::size_type pos2 = line.find(comma, pos1 + 1);
-  std::string::size_type length = pos2 - pos1;
+  std::string::size_type pos2 = line.find(comma, pos1 + 1);// Position to the second comma
+  std::string::size_type length = pos2 - pos1;// length beetwen the first comma to the second comma
 
   value_str = line.substr(pos1 + 1, length - 1);
   float value_f = converter_str_f(value_str);
-  cache[lineIndex][0] = value_f;
+  cache[lineIndex][0] = value_f;// Bring open_value in cache array
 
-  pos1 = line.find(comma, pos2 + 1);
-  length = pos1 - pos2;
+  pos1 = line.find(comma, pos2 + 1);// Position to the third comma
+  length = pos1 - pos2;// length beetwen the second comma to the third comma
 
   value_str = line.substr(pos2 + 1, length - 1);
   value_f = converter_str_f(value_str);
-  cache[lineIndex][1] = value_f;
+  cache[lineIndex][1] = value_f;// Bring hight_value in cache array
 
-  pos2 = line.find(comma, pos1 + 1);
-  length = pos2 - pos1;
+  pos2 = line.find(comma, pos1 + 1);// Position to the fourth comma
+  length = pos2 - pos1;// length beetwen the fird comma to the fourth comma
 
   value_str = line.substr(pos1 + 1, length - 1);
   value_f = converter_str_f(value_str);
-  cache[lineIndex][2] = value_f;
+  cache[lineIndex][2] = value_f;// Bring low_value in cache array
 
   value_str = line.substr(pos2 + 1);
   value_f = converter_str_f(value_str);
-  cache[lineIndex][3] = value_f;
+  cache[lineIndex][3] = value_f;// Bring close_value in cache array
 }
 
+// compare number of line chosen by user for bring the hight_value, low_value... in the result array
 void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache[][4], std::string dateCache[], std::string resultArray[][5])
 {
   // Compute max of maxs .... and min of mins
@@ -128,13 +131,15 @@ void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache
   resultArray[lineIndex][1] = converter_f_str(cache[(lineIndex + numberLineCompare - 1)% size_cache][0]);
   // copy newest close_value among numberLineCompare
   resultArray[lineIndex][4] = converter_f_str(cache[lineIndex % size_cache][3]);
-
+  // copy hight_value among numberLineCompare
   resultArray[lineIndex][2] = converter_f_str(maxOfHightValues);
-
+  // copy low_value among numberLineCompare
   resultArray[lineIndex][3] = converter_f_str(minOfLowValues);
 }
 
-// Function which process a CSV file and copy results in resultArray
+// Function which call parseLine function which bring line to CSV file in a cache and
+// integrate fonction which compare number of line chosen by user for bring the hight_value,
+// low_value... in the result array
 int processCSVFile(std::string& nameFile, int numberLineCompare, std::string resultArray[][5])
 {
   std::ifstream openFile(nameFile.c_str());
@@ -152,7 +157,6 @@ int processCSVFile(std::string& nameFile, int numberLineCompare, std::string res
   // Create a dinamic array (dateCache)
   std::string* dateCache;
   dateCache = new std::string[size_cache];
-
   if(dateCache == nullptr)
   {
     std::cout << "Error ! Unable to create date cache Array" << std::endl;
@@ -162,7 +166,6 @@ int processCSVFile(std::string& nameFile, int numberLineCompare, std::string res
   // Create a multi-dimensional dynamic array (cache)
   float (*cache)[4];
   cache = new float[size_cache][4];
-
   if(cache == nullptr)
   {
     std::cout << "Error ! Unable to create cache Array" << std::endl;
@@ -202,34 +205,27 @@ bool writeResultArray(std::string resultArray[][5], int size_resultArray) // Fun
   std::cout << size_resultArray - 1 << std::endl;
   for(int i = 0; i <= size_resultArray - 1; i++)
   {
-    writeFile << resultArray[i][0];
-    writeFile << ",";
-    writeFile << resultArray[i][1];
-    writeFile << ",";
-    writeFile << resultArray[i][2];
-    writeFile << ",";
-    writeFile << resultArray[i][3];
-    writeFile << ",";
-    writeFile << resultArray[i][4];
-    writeFile << std::endl;
+    std::string line = (resultArray[i][0] + "," + resultArray[i][1] + "," + resultArray[i][2] + "," + resultArray[i][3] + "," + resultArray[i][4]);
+    writeFile << line << std::endl;
   }
   return true;
 }
 
 int main(int argc, char **argv)
 {
-  std::string nameFile("fx_base.csv");
+  std::string nameFile("fx_base.csv");   // name CSV file which contain the donnees
+  int numberLine_baseFile = 0; // Number of line to CSV file
   int numberLineCompare = 25; // Number of line to compare chosen by the user
-  int numberLine_baseFile = 0;
+
+  numberLine_baseFile = countFileLine(nameFile); // count number line in CSV file
 
 //  std::cout << "Hello, enter file name : ";
 //  std::cin >> nameFile;
 //  std::cout << "Enter number line to compare : ";
 //  std::cin >> numberLineCompare;
 
-  numberLine_baseFile = countFileLine(nameFile); // count number line in fx_base file
-
-  std::string (*resultArray)[5]; // Create a multi-dimensional array (resultArray)
+  // Create a multi-dimensional dinamic array which contain the results
+  std::string (*resultArray)[5];
   resultArray = new std::string[numberLine_baseFile][5]();
   if(resultArray == nullptr)
   {
@@ -237,6 +233,9 @@ int main(int argc, char **argv)
     return -1;
   }
 
+  // Bring line to CSV file in a cache.
+  // compare number of line chosen by user for bring the hight_value, low_value... in the result array
+  // write result array in CSV file
   int numberLineArray = processCSVFile(nameFile, numberLineCompare, resultArray);
   if( ! writeResultArray(resultArray, numberLineArray)) return -1;
   std::cout << "Done !" << std::endl;
