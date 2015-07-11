@@ -16,6 +16,9 @@ the line is constitue to five value :
                                          ---------------
 
  1 - Open config.txt file
+ 
  2 - Entry name of base file and number of line to compare
+ 
  3 - Save config.txt file
+ 
  4 - Launch program
