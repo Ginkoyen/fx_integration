@@ -1,6 +1,6 @@
-                                              --------------
-                                               INTRODUCTION
-                                              --------------
+                                --------------
+                                 INTRODUCTION
+                                --------------
 
 The program read a CSV base file and compare x lines chosen by user and bring the result in CSV result array
 the line is constitue to five value :
@@ -11,14 +11,14 @@ the line is constitue to five value :
 - Low_value :  The low_value among numberLineCompare is bring in result CSV file
 - close_value : The newest close_value among numberLineCompare is bring in result CSV file
 
-                                              ---------------
-                                               CONFIGURATION
-                                              ---------------
+                                ---------------
+                                 CONFIGURATION
+                                ---------------
 
  1 - Open config.txt file
- 
+
  2 - Entry name of base file and number of line to compare
  
  3 - Save config.txt file
- 
+
  4 - Launch program
