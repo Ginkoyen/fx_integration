@@ -23,7 +23,7 @@ Date | open_value | Hight_value | Low_value | close_value
 4 - Reiterer en commancant une ligne plus bas, toujours sur x lignes.
 
 - L utilisateur choisi de comparer 25 lignes on commence a partir de la ligne 0.
-#include <fstream>
+
 - Les lignes 0 a 25 sont comparee, la ligne de resultat est rentree dans la premiere ligne du tableau resultat.
 - Les lignes 1 a 26 sont comparee, la ligne de resultat est rentree dans la seconde ligne du tableau resultat.
 - etc ...
@@ -200,7 +200,7 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare)
 }
 
 
-// Function which read config file for find csv name File and number line to compare
+// Function which read config file for find name of csv base File and number of line to compare
 bool readConfigFile(std::string& nameFile, int& numberLineCompare)
 {
    std::string line("");
@@ -212,7 +212,7 @@ bool readConfigFile(std::string& nameFile, int& numberLineCompare)
      return false;
    }
 
-   while(getline(openFile, line))// Read name csv file and number of line to compare in config file
+   while(getline(openFile, line))// Read name of csv base file and number of line to compare in config file
    {
       if(line.find("NAME_BASE_CSV_FILE") != std::string::npos)
       {
@@ -231,7 +231,7 @@ bool readConfigFile(std::string& nameFile, int& numberLineCompare)
 
 int main(int argc, char **argv)
 {
-  std::string nameFile("");   // name CSV file which contain the donnees
+  std::string nameFile("");   // name of CSV base file which contain the donnees
   int numberLineCompare = 0; // Number of line to compare chosen by the user
 
   // read config file for find csv name File and number line to compare
