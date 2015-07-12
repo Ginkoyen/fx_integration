@@ -92,16 +92,16 @@ void parseLine(std::string& line, int lineIndex, float cache[][4], std::string d
 
 
 // compare number of line chosen by user for bring the hight_value, low_value... in the result array
-void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache[][4], std::string dateCache[], std::ofstream& writeFile)
+void integrate(int lineIndex, int numberLineCompare, float cache[][4], std::string dateCache[], std::ofstream& writeFile)
 {
         // ## Compute max of maxs .... and min of mins ## //
 
-   float maxOfHightValues =  cache[lineIndex % size_cache][1];
-   float minOfLowValues = cache[lineIndex % size_cache][2];
+   float maxOfHightValues =  cache[lineIndex % numberLineCompare][1];
+   float minOfLowValues = cache[lineIndex % numberLineCompare][2];
 
    for(int i = lineIndex + 1; i < lineIndex + numberLineCompare; i++)
    {
-     int cache_index = i % size_cache;
+     int cache_index = i % numberLineCompare;
 
      if(cache[cache_index][1] > maxOfHightValues)
        maxOfHightValues = cache[cache_index][1];
@@ -113,11 +113,11 @@ void integrate(int lineIndex, int numberLineCompare, int size_cache, float cache
                // ## Write result in csv file ## //
 
    // write the most recent date in result csv file
-   writeFile << dateCache[lineIndex % size_cache] << ",";
+   writeFile << dateCache[lineIndex % numberLineCompare] << ",";
    // write older open_value among numberLineCompare in result csv file
-   writeFile << cache[(lineIndex + numberLineCompare - 1)% size_cache][0] << ",";
+   writeFile << cache[(lineIndex + numberLineCompare - 1)% numberLineCompare][0] << ",";
    // write newest close_value among numberLineCompare in result csv file
-   writeFile << cache[lineIndex % size_cache][3] << ",";
+   writeFile << cache[lineIndex % numberLineCompare][3] << ",";
    // write hight_value among numberLineCompare in result csv file
    writeFile << maxOfHightValues << ",";
    // write low_value among numberLineCompare in result csv file
@@ -150,13 +150,12 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare)
   }
                      // ## Create caches ## //
 
-  // create a cache with 2 times the size of lines to process for each iteration
+  // create a cache to process for each iteration
   // in order to maximize reuse of line already read.
-  int size_cache = numberLineCompare * 2;
 
   // Create a dinamic array (dateCache)
   std::string* dateCache;
-  dateCache = new std::string[size_cache];
+  dateCache = new std::string[numberLineCompare];
   if(dateCache == nullptr)
   {
     std::cout << "Error ! Unable to create date cache Array" << std::endl;
@@ -164,7 +163,7 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare)
   }
   // Create a multi-dimensional dynamic array (cache)
   float (*cache)[4];
-  cache = new float[size_cache][4];
+  cache = new float[numberLineCompare][4];
   if(cache == nullptr)
   {
     std::cout << "Error ! Unable to create cache Array" << std::endl;
@@ -174,7 +173,7 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare)
   for(int i = 0; i < numberLineCompare; i++)
   {
     getline(openFile, line);
-    parseLine(line, i % size_cache, cache, dateCache);
+    parseLine(line, i % numberLineCompare, cache, dateCache);
   }
 
         // ## Compare line, copy line in caches and write result ## //
@@ -184,12 +183,12 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare)
   int lineIndex = 0;
   while(getline(openFile, line))
   {
-    integrate(lineIndex, numberLineCompare, size_cache, cache, dateCache, writeFile);
-    parseLine(line, (lineIndex + numberLineCompare) % size_cache, cache, dateCache);
+    integrate(lineIndex, numberLineCompare, cache, dateCache, writeFile);
+    parseLine(line, (lineIndex + numberLineCompare) % numberLineCompare, cache, dateCache);
     lineIndex++;
   }
   // Compare the last line and write result in csv file
-  integrate(lineIndex, numberLineCompare, size_cache, cache, dateCache, writeFile);
+  integrate(lineIndex, numberLineCompare, cache, dateCache, writeFile);
 
   // Destructors
   openFile.close();
