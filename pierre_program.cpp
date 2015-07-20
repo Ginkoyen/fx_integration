@@ -33,6 +33,10 @@ Date | open_value | Hight_value | Low_value | close_value
 #include <sstream>
 #include <fstream>
 
+
+/*==================
+  Function : Converter
+==================*/
 float converter_str_f(std::string value_str)// convert a str type to a float type
 {
   float value_f;
@@ -52,8 +56,11 @@ int converter_str_int(std::string value_str)// convert a str type to a int type
 }
 
 
-// function which read a line of CSV file and write open_value, close_value... in a columns of
-// cache array and the date in date cache array
+/*==================
+  Function parseLine
+==================*/
+// Read a line of CSV file and write open_value, close_value...
+// in a columns of cache array and the date in date cache array
 void parseLine(std::string& line, int lineIndex, float cache[][4], std::string dateCache[])
 {
   std::string comma(",");
@@ -91,7 +98,9 @@ void parseLine(std::string& line, int lineIndex, float cache[][4], std::string d
 }
 
 
-// compare number of line chosen by user for bring the hight_value, low_value... in the result array
+/*==================
+  Function integrate : Compare number of line chosen by user for bring the hight_value, low_value... in the result array
+==================*/
 void integrate(int lineIndex, int numberLineCompare, float cache[][4], std::string dateCache[], std::ofstream& writeFile)
 {
         // ## Compute max of maxs .... and min of mins ## //
@@ -125,6 +134,9 @@ void integrate(int lineIndex, int numberLineCompare, float cache[][4], std::stri
 }
 
 
+/*==================
+  Function processCSVFile
+==================*/
 // Function which call parseLine function which bring line to CSV file in a cache and
 // integrate function which compare number of line chosen by user for bring the hight_value,
 // low_value... in the result result in csv file
@@ -199,7 +211,9 @@ bool processCSVFile(std::string& nameFile, int numberLineCompare)
 }
 
 
-// Function which read config file for find name of csv base File and number of line to compare
+/*==================
+  Function readConfigFile : Read config file for find name of csv base File and number of line to compare
+==================*/
 bool readConfigFile(std::string& nameFile, int& numberLineCompare)
 {
    std::string line("");
@@ -228,9 +242,10 @@ bool readConfigFile(std::string& nameFile, int& numberLineCompare)
 }
 
 
+
 int main(int argc, char **argv)
 {
-  std::string nameFile("");   // name of CSV base file which contain the donnees
+  std::string nameFile("");  // name of CSV base file which contain the donnees
   int numberLineCompare = 0; // Number of line to compare chosen by the user
 
   // read config file for find csv name File and number line to compare
